@@ -1,24 +1,29 @@
-from machine import Pin, SPI
-from time import sleep, sleep_us
+from machine import Pin
+from time import sleep_ms, sleep_us
 
-spi = SPI(1, baudrate=10_000, polarity=0, phase=0, bits=8, sck=10, mosi=11, miso=12)
-
+CLK = Pin(10, Pin.OUT)
+DIN = Pin(12, Pin.IN, Pin.PULL_UP)
 LATCH = Pin(9, Pin.OUT)
-Beeper = Pin(13, Pin.OUT)
-Beeper.value(0)
 
-def LS165():
+def HC165():
     LATCH.value(1)
-    sleep_us(10)
+    CLK.value(1)
+    sleep_ms(100)
     LATCH.value(0)
-    sleep_us(10)
+    sleep_ms(100)
     LATCH.value(1)
     # data is latched - now shift it in
-    rxdata = spi.read(1, 0x42)
-    return(rxdata)
-
+    X = 0
+    for i in range(0,8):
+        CLK.value(0)
+        sleep_ms(100)
+        X = (X << 1) + DIN.value()
+        CLK.value(1)
+        sleep_ms(100)
+        print(i, X)
+    return(X)
     
 while(1):
-    Y = LS165()
+    Y = HC165()
     print(Y)
-    sleep(0.1)
+    sleep_ms(100)

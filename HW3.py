@@ -1,19 +1,17 @@
-from machine import Pin, SPI
-from time import sleep, sleep_us
+from machine import Pin
+from time import sleep, sleep_ms, sleep_us
 import random
 
 # Define Inputs (Push Buttons)
 btn_14 = Pin(14, Pin.IN)
 btn_15 = Pin(15, Pin.IN)
+DIN = Pin(22, Pin.IN, Pin.PULL_UP)
 
-# Define Outputs (LEDs, Beeper)
+# Define Outputs (LEDs, Clk)
+CLK = Pin(10, Pin.OUT)
 LATCH = Pin(9, Pin.OUT)
-beeper = Pin(13, Pin.OUT)
 led_16 = Pin(16, Pin.OUT)
 led_17 = Pin(17, Pin.OUT)
-
-# Define SPI
-spi = SPI(1, baudrate=10_000, polarity=0, phase=0, bits=8, sck=10, mosi=11, miso=12)
 
 # 1. Write a Python program which turns on the LEDs based upon which buttons are pressed:
 #       GP16: Turn on if both buttons are pressed (logic AND)
@@ -31,7 +29,7 @@ def btn_logic():
             led_17.off()
         sleep(0.1)
 
-# btn_logic()
+btn_logic()
 
 
 # 2. Write a Python program which counts when you press the buttons
@@ -73,24 +71,29 @@ def btn_count():
 def get_rand():
     return random.randint(0, 255)
 
-for _ in range(0,10):
-    print(f'rand={get_rand()}')
+# for _ in range(0,10):
+#     print(f'rand={get_rand()}')
 
 # 4. Write a subroutine which reads a 74165 shift register and returns a number from 0 to 255
-def LS165_read():
+def HC165():
+    
     LATCH.value(1)
-    sleep_us(10)
+    CLK.value(1)
+    sleep_ms(2)
     LATCH.value(0)
-    sleep_us(10)
+    sleep_ms(1)
     LATCH.value(1)
+    sleep_ms(15)
     # data is latched - now shift it in
-    rxdata = spi.read(1, 0x42)
-    return(rxdata)
-
-# while(1):
-#     Y = LS165_read()
-#     print(Y)
-#     sleep(0.1)
+    X = 0
+    for i in range(0,8):
+        CLK.value(0)
+        sleep_ms(20)
+        X = (X << 1) + DIN.value()
+        CLK.value(1)
+        sleep_ms(20)
+        print(i, X)
+    return(X)
 
 # 5. Write a Python program which simulates a combination lock
 #       Test your code
@@ -100,9 +103,9 @@ def LS165_read():
 def combination_lock():
     code = get_rand()
     print(f'Code: {code}')
-
+    sleep(2)
     while True:
-        guess = input('Enter your guess: ')
+        guess = HC165()
         print(f'Guess: {guess}')
         
         if guess < code:
@@ -112,6 +115,9 @@ def combination_lock():
         else:
             print('Correct')
             break
+        sleep_ms(500)
+        
+# combination_lock()
 
 # 6. Demonstrate your code in a video
 
@@ -130,3 +136,5 @@ def combination_lock():
 # Pin 9/Q_H - Output (connect to oscilloscope with clk to verify read out)
 # Pin 15/CLK INH - Clk inhibit should be tied high
 # Tie all other pins randomly to 3.3V or GND to determine the guess
+# Tie SER low to reduce noise on the chip
+# Had HW problems with the shift register, which explains why there is an inconsistency in my timing
