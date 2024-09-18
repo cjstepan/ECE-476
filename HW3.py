@@ -121,16 +121,6 @@ def combination_lock():
 
 # 6. Demonstrate your code in a video
 
-# Questions for Glower:
-# 4. Am I supposed to use get_rand to generate my random number, load it into the shift register, and then read it back?
-# -For the homework, generate the random number as the code, and then read the shift register to get the guess
-# -The shift register guess is set by the user with lines tied low and high
-# -Verify the shift register output by reading it back on an oscilloscope
-# What does testing code look like? I got docked on HW2 for not testing
-# -Test each subroutine multiple times, that should suffice
-# 5. for simulating the combo lock, do I need to continually guess until I get the combo right, or just once?
-# -continually guess until it's right
-
 # Shift Register pinout:
 # Connect Clk to Oscilloscope (shift on rising edge, read bit on falling edge)
 # Pin 9/Q_H - Output (connect to oscilloscope with clk to verify read out)
