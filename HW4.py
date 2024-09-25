@@ -1,10 +1,6 @@
 from machine import ADC, Pin, PWM
 from time import sleep_ms
 
-# GP14 = push button (decrease angle)
-# GP15 = push button (increase angle)
-# GP16 = control input to digital servo motor
-
 Up = Pin(15, Pin.IN, Pin.PULL_UP)
 Down = Pin(14, Pin.IN, Pin.PULL_DOWN)
 
@@ -15,9 +11,6 @@ Motor.freq(100)
 Spkr = PWM(Pin(18))
 Spkr.init(freq=100, duty_ns=5000)
 Spkr.duty_u16(32768)
-
-Control = Pin(16, Pin.OUT)
-Control = PWM(Pin(16))
 
 # Write a Python program to turn your Pico board into an electronic trombone
 # -When the analog input (joystick) is all the way left, the Pico outputs 220Hz
