@@ -71,7 +71,7 @@ def record_temp():
         file.write(str(sec) + ",")
         file.write(str(f"{temp_C:.2f}" + ";\n"))
         print(sec, temp_C)
-        LCD.BarChart(plot, White, LtBlue)
+        LCD.Bar(plot, White, LtBlue)
     file.close()
 
 # record_temp()
