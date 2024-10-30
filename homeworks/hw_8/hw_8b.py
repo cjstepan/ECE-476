@@ -48,6 +48,7 @@ while(1):
         flag = 0
 
         Volts = (a2d2.read_u16() * kV)
+        print(Volts)
         x[i] = i    
         y[i] = Volts
     

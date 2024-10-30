@@ -83,7 +83,7 @@ while(1):
     LCD.Clear(Navy)
     LCD.Plot(x,y)
     LCD.Title('Heart Rate',White, Navy)
-    LCD.Text(f'BPM={bpm:.2f}', 5, 5, Navy, Yellow)
-    LCD.Text(f'Time Between Pulses={pulse_time:.2f}us', 350, 5, Navy, Yellow)
+    LCD.Text(f'BPM={bpm:.2f}', 25, 7, Navy, Yellow)
+    LCD.Text(f'Time={pulse_time:.2f}us', 325, 7, Navy, Yellow)
 
     sleep(1)

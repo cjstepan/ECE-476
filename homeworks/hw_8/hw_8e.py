@@ -1,6 +1,6 @@
 # Complete project details at https://RandomNerdTutorials.com/raspberry-pi-pico-bme280-micropython/
 
-from machine import Pin, I2C
+from machine import Pin, I2C, Timer
 from time import sleep
 import BME280
 
@@ -12,9 +12,19 @@ import BME280
 # rate of one second (60 data points). After one second, display the data on the terminal window.
 
 # Initialize I2C communication
-i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=10000)
+i2c = I2C(id=0, scl=Pin(9), sda=Pin(8), freq=10000)
 
-for i in range(0,60):
+# Timer Init
+tim = Timer()
+N = 0
+
+def tic(timer):
+    global N
+    N += 1
+
+tim.init(freq=1, mode=Timer.PERIODIC, callback=tic)
+
+while N < 60:
     try:
         # Initialize BME280 sensor
         bme = BME280.BME280(i2c=i2c)
@@ -25,11 +35,11 @@ for i in range(0,60):
         pres = bme.pressure
         
         # Print sensor readings
-        if i > 0:
+        if N > 0:
             print('---------')
             print('Temperature: ', tempC)
             print('Humidity: ', hum)
-            print('Pr`essure: ', pres)
+            print('Pressure: ', pres)
         
     except Exception as e:
         # Handle any exceptions during sensor reading

@@ -1,6 +1,6 @@
 # Complete project details at https://RandomNerdTutorials.com/raspberry-pi-pico-bme280-micropython/
 
-from machine import Pin, I2C
+from machine import Pin, I2C, Timer
 from time import sleep
 import BME280
 import LCD
@@ -19,17 +19,13 @@ import LCD
 # - In-person or video
 
 # Initialize I2C communication
-i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=10000)
+i2c = I2C(id=0, scl=Pin(9), sda=Pin(8), freq=10000)
+
+# Initialize BME280 sensor
+bme = BME280.BME280(i2c=i2c, addr=0x76)
 
 # Initialize GP15 as push button
 toggle_btn = Pin(15, Pin.IN, Pin.PULL_UP)
-
-show_plot = 0
-def toggle(btn):
-    global show_plot
-    show_plot += 1
-
-toggle_btn.irq(handler=toggle, trigger=Pin.IRQ_FALLING)
 
 # LCD Init
 Navy = LCD.RGB(0,0,5)
@@ -38,38 +34,39 @@ Yellow = LCD.RGB(200,200,0)
 LCD.Init()
 LCD.Clear(Navy)
 
-time, data_tempC, data_humidity, data_pressure = []
-for i in range(0,60):
-    try:
-        # Initialize BME280 sensor
-        bme = BME280.BME280(i2c=i2c)
-        
-        # Read sensor data
-        tempC = bme.temperature
-        hum = bme.humidity
-        pres = bme.pressure
+time = []
+data_tempC = []
+data_humidity = []
+data_pressure = []
+i = 0
+while i < 60:
+    time.append(i)
+    # Read sensor data
+    tempC = float(bme.temperature[:5])
+    hum = float(bme.humidity[:5])
+    pres = float(bme.pressure[:6])
 
-        # Record sensor data
-        data_tempC.append(tempC)
-        data_humidity.append(hum)
-        data_pressure.append(pres)
-        
-    except Exception as e:
-        # Handle any exceptions during sensor reading
-        print('An error occurred:', e)
+    # Record sensor data
+    data_tempC.append(tempC)
+    data_humidity.append(hum)
+    data_pressure.append(pres)
 
 sleep(1)
+show_plot = 0
 while True:
+    while toggle_btn.value():
+        pass
     LCD.Clear(Navy)
 
     if show_plot == 0:
         LCD.Title("Temp C", White, Navy)
         LCD.Plot(time, data_tempC)
+        show_plot = 1
     elif show_plot == 1:
         LCD.Title("Humidity", White, Navy)
         LCD.Plot(time, data_humidity)
-    elif show_plot == 2:
+        show_plot = 2
+    else:
         LCD.Title("Pressure", White, Navy)
         LCD.Plot(time, data_pressure)
-    else:
         show_plot = 0
