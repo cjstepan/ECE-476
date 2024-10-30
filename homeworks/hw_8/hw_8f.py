@@ -38,10 +38,8 @@ Yellow = LCD.RGB(200,200,0)
 LCD.Init()
 LCD.Clear(Navy)
 
-
 time, data_tempC, data_humidity, data_pressure = []
 for i in range(0,60):
-
     try:
         # Initialize BME280 sensor
         bme = BME280.BME280(i2c=i2c)
@@ -62,7 +60,6 @@ for i in range(0,60):
 
 sleep(1)
 while True:
-
     LCD.Clear(Navy)
 
     if show_plot == 0:
