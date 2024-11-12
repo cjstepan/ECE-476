@@ -21,6 +21,10 @@ def accel_read(reg):
     y = y / 0x8000
     return(y)
 
+def calculate_distance(time):
+    # calculate distance as d = 1/8 at^2 where a=9.8m/s and t is the time aloft
+    return .125 * 9.8 * pow(time)
+
 i2c = I2C(0, scl=Pin(1), sda=Pin(0))
 
 Beeper = Pin(13, Pin.OUT)
@@ -111,5 +115,3 @@ if(0):
         time.sleep(0.1)
 
 # Work on Displaying top 3 results on graphics display
-
-# calculate distance as d = 1/8 at^2 where a=9.8m/s and t is the time aloft
