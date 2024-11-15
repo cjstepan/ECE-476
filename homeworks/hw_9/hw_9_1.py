@@ -1,5 +1,5 @@
 from machine import Pin, I2C
-import time
+from time import sleep_ms, ticks_ms
 import LCD
 
 def reg_write(i2c, addr, reg, data):
@@ -21,9 +21,6 @@ def accel_read(reg):
     y = y / 0x8000
     return(y)
 
-def calculate_distance(time):
-    # calculate distance as d = 1/8 at^2 where a=9.8m/s and t is the time aloft
-    return .125 * 9.8 * pow(time)
 
 i2c = I2C(0, scl=Pin(1), sda=Pin(0))
 
@@ -33,7 +30,7 @@ Button15 = Pin(15, Pin.IN, Pin.PULL_UP)
 
 def Beep():
     Beeper.value(1)
-    time.sleep(0.1)
+    sleep_ms(100)
     Beeper.value(0)
 
 
@@ -54,64 +51,43 @@ RANGE = 2
 # set clock freq
 reg_write(i2c, 0x68, 0x6b, 0) # Internal 8MHz Clock
 
-time.sleep(1)
+sleep_ms(100)
 
 LCD.Init()
-Navy = LCD.RGB(0,0,5)
-LCD.Clear(Navy)
-
-npt = 200
-Data = [ [0]*npt, [0]*npt, [0]*npt ]
-t = [0]*npt
-
-FileName = 'GY521_Jump.txt'
+White = LCD.RGB(255,255,255)
+Black = LCD.RGB(0,0,0)
+Orange = LCD.RGB(255,140,0)
+LCD.Clear(Black)
+distance = [0,0,0]
 
 while(1):
-    flag = 0
+    is_free_fall = 0
     while(Button14.value() == 1):
-        if(Button15.value() == 0):
-            if(flag == 0):
-                print('Saving Data')
-                f = open(FileName, "a")
-                f.write('-----------------\n')
-                for i in range(0,npt):
-                    mx = str('{: 11.5f}'.format(Data[0][i]))
-                    my = str('{: 11.5f}'.format(Data[1][i]))
-                    mz = str('{: 11.5f}'.format(Data[2][i]))
-                    f.write(mx + my + mz + '\n')
-                f.close()
-                flag = 1
         pass
     Beep()
-    for i in range(0,npt):
-        x = accel_read(0x3b) * RANGE
-        y = accel_read(0x3d) * RANGE
-        z = accel_read(0x3f) * RANGE
-        Data[0][i] = x
-        Data[1][i] = y
-        Data[2][i] = z
-        t[i] = i
-        time.sleep(0.01)
-    Data[0][0] = -RANGE
-    Data[0][1] = +RANGE
-    LCD.Clear(Navy)
-    LCD.Plot(t,Data)
-    for i in range(0,npt):
-        print(Data[0][i], Data[1][i], Data[2][i])
+    start_time_ms = end_time_ms = -1
+    for i in range(0, 200):
+        accel_z = accel_read(0x3f) * RANGE
+        if accel_z < .5 and is_free_fall == 0:
+            start_time_ms = ticks_ms()
+            is_free_fall = 1
+        if accel_z > .5 and is_free_fall == 1:
+            end_time_ms = ticks_ms()
+            is_free_fall = -1
+        sleep_ms(10)
 
+    jump_height_cm = .125 * 9.8 * ((start_time_ms - end_time_ms) / 1000) **2
+    distance.append(jump_height_cm)
+    distance.sort(reverse=True)
 
-if(0):
-    for i in range(0,100):
-        x = accel_read(0x3b) * RANGE
-        y = accel_read(0x3d) * RANGE
-        z = accel_read(0x3f) * RANGE
+    
+    LCD.Title('Top Jumps', White, Black)
 
-        mx = 'x" = ' + str('{: 5.3f}'.format(x))
-        my = '    y" = ' + str('{: 5.3f}'.format(y))
-        mz = '    z" = ' + str('{: 5.3f}'.format(z))
+    LCD.Text2('First Place: ', 40, 50, Orange, Black)
+    LCD.Text2('Second Place: ', 40, 100, Orange, Black)
+    LCD.Text2('Third Place: ', 40, 150, Orange, Black)
 
-        print(x, y, z)
-        #print(mx + my + mz, "   ",end="\r")
-        time.sleep(0.1)
-
-# Work on Displaying top 3 results on graphics display
+    sleep_ms(500)
+    LCD.Text2(str(distance[0]) + ' cm ', 320, 50, White, Black)
+    LCD.Text2(str(distance[1]) + ' cm ', 320, 100, White, Black)
+    LCD.Text2(str(distance[2]) + ' cm ', 320, 150, White, Black)
