@@ -1,18 +1,11 @@
-while(1):
-    if not vars.N == 0:
-        print(vars.N)
-    sleep_ms(10)
-
-from machine import Pin, I2C, Timer
+from machine import Pin, I2C
 from time import sleep_ms, ticks_ms
 from neopixel import NeoPixel
 from set import Set
 import LCD
 
-
-np = NeoPixel(Pin(1), vars.N, bpp=3, timing=1)
-tim = Timer()
 vars = Set(0,0,8)
+np = NeoPixel(Pin(11), vars.N, bpp=3, timing=1)
 
 def reg_write(i2c, addr, reg, data):
     msg = bytearray()
@@ -32,23 +25,6 @@ def accel_read(reg):
         y = y - 0x10000
     y = y / 0x8000
     return(y)
-
-def light(pin1):
-    vars.N = 0
-    np.fill([0,0,0])
-    np.write()
-    tim.init(freq=4,mode=Timer.PERIODIC,callback=tic)
-
-def tic(timer):
-    np.__setitem__(vars.N, [0,10,10])
-    np.write()
-    vars.N += 1
-    if(vars.N == 6):
-        tim.init(freq=4,mode=Timer.ONE_SHOT,callback=tic)
-    elif vars.N == 0: # might not ever reach this code??
-        np.fill([0,0,0])
-        np.write()
-
 
 i2c = I2C(0, scl=Pin(1), sda=Pin(0))
 
@@ -87,11 +63,18 @@ Orange = LCD.RGB(255,140,0)
 LCD.Clear(Black)
 distance = [0,0,0]
 
-start_jump_btn.irq(trigger=Pin.IRQ_FALLING, handler=light)
 while(1):
     is_free_fall = 0
+    np.fill([0,0,0])
+    np.write()
     while(start_jump_btn.value() == 1):
         pass
+    for i in range(0,7):
+        np.__setitem__(i, [0,10,10])
+        np.write()
+        sleep_ms(200)
+    np.fill([0,200,0])
+    np.write()
     Beep()
     start_time_ms = end_time_ms = -1
     for i in range(0, 200):
@@ -104,18 +87,14 @@ while(1):
             is_free_fall = -1
         sleep_ms(10)
 
-    jump_height_cm = .125 * 9.8 * ((start_time_ms - end_time_ms) / 1000) **2
+    jump_height_cm = (.125 * 9.8 * ((start_time_ms - end_time_ms) / 1000) **2) * 100
     distance.append(jump_height_cm)
     distance.sort(reverse=True)
-
-    
     LCD.Title('Top Jumps', White, Black)
-
     LCD.Text2('First Place: ', 40, 50, Orange, Black)
     LCD.Text2('Second Place: ', 40, 100, Orange, Black)
     LCD.Text2('Third Place: ', 40, 150, Orange, Black)
-
     sleep_ms(500)
-    LCD.Text2(str(distance[0]) + ' cm ', 320, 50, White, Black)
-    LCD.Text2(str(distance[1]) + ' cm ', 320, 100, White, Black)
-    LCD.Text2(str(distance[2]) + ' cm ', 320, 150, White, Black)
+    LCD.Text2(f'{distance[0]:.3f} cm ', 320, 50, White, Black)
+    LCD.Text2(f'{distance[1]:.3f} cm ', 320, 100, White, Black)
+    LCD.Text2(f'{distance[2]:.3f} cm ', 320, 150, White, Black)

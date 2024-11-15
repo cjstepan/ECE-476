@@ -76,7 +76,7 @@ while(1):
             is_free_fall = -1
         sleep_ms(10)
 
-    jump_height_cm = .125 * 9.8 * ((start_time_ms - end_time_ms) / 1000) **2
+    jump_height_cm = (.125 * 9.8 * ((start_time_ms - end_time_ms) / 1000) **2) * 100
     distance.append(jump_height_cm)
     distance.sort(reverse=True)
 
@@ -88,6 +88,6 @@ while(1):
     LCD.Text2('Third Place: ', 40, 150, Orange, Black)
 
     sleep_ms(500)
-    LCD.Text2(str(distance[0]) + ' cm ', 320, 50, White, Black)
-    LCD.Text2(str(distance[1]) + ' cm ', 320, 100, White, Black)
-    LCD.Text2(str(distance[2]) + ' cm ', 320, 150, White, Black)
+    LCD.Text2(f'{distance[0]:.3f} cm ', 320, 50, White, Black)
+    LCD.Text2(f'{distance[1]:.3f} cm ', 320, 100, White, Black)
+    LCD.Text2(f'{distance[2]:.3f} cm ', 320, 150, White, Black)
