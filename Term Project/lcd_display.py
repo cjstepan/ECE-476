@@ -1,0 +1,1 @@
+# isolated script for lcd routine
