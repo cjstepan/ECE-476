@@ -1,14 +1,13 @@
-from machine import Pin 
-import bluetooth
 from ble_simple_peripheral import BLESimplePeripheral
-import neopixel
-import LCD
+import bluetooth, LCD, neopixel
+from machine import Pin 
 from set import Set
+from math import pi
 
 ble = bluetooth.BLE()
 sp = BLESimplePeripheral(ble)
 
-np = neopixel.NeoPixel(Pin(1), 8, bpp=3, timing=1) # 8 Neopixels
+np = neopixel.NeoPixel(Pin(11), 8, bpp=3, timing=1) # 8 Neopixels
 
 vars = Set(0,0,0)
 
