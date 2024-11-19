@@ -1,20 +1,34 @@
 from ble_simple_peripheral import BLESimplePeripheral
 import bluetooth, LCD, neopixel
-from machine import Pin 
-from set import Set
+from machine import Pin, PWM
 from math import pi
+from time import sleep_ms
 
 ble = bluetooth.BLE()
 sp = BLESimplePeripheral(ble)
 
-np = neopixel.NeoPixel(Pin(11), 8, bpp=3, timing=1) # 8 Neopixels
+a_out = Pin(16, Pin.OUT)
+a_out_pwm = PWM(a_out)
+a_out_pwm.freq(20_000)
 
-vars = Set(0,0,0)
+b_out = Pin(17, Pin.OUT)
+b_out_pwm = PWM(b_out)
+b_out_pwm.freq(20_000)
+flag = 0
+motor_duty = 0
 
-def set_neopixel(value):
-    vars.Level = value
-    np.fill([vars.Level,vars.Level,vars.Level])
-    np.write()
+def set_speed(num):
+    return int((num / 100) * 65535)
+
+def update_motor_speed(duty):
+    speed = set_speed(abs(duty))
+    if duty > 0:
+        a_out_pwm.duty_u16(speed)
+        b_out_pwm.duty_u16(0)
+    else:
+        a_out_pwm.duty_u16(0)
+        b_out_pwm.duty_u16(speed)
+    sleep_ms(10)
 
 def LCD_reinit():
     LCD.Clear(Black)
@@ -31,10 +45,12 @@ def between(num, bound):
 def on_rx(data):
     print("Data received: ", data)
     try:
-        vars.Level = int(data[0:4]) # look for 0:4 to account for negative symbol (range of +/- 100)
-        vars.Level = between(vars.Level, 100)
-        set_neopixel(vars.Level)
-        vars.flag = 1
+        global motor_duty
+        motor_duty = int(data[0:4]) # look for 0:4 to account for negative symbol (range of +/- 100)
+        motor_duty = between(motor_duty, 100)
+        update_motor_speed(motor_duty)
+        global flag
+        flag = 1
     except:
         print('invalid data entry')
 
@@ -43,18 +59,15 @@ White = LCD.RGB(250,250,250)
 Black = LCD.RGB(0,0,0)
 Yellow = LCD.RGB(250,250,0)
 LCD_reinit()
-vars.flag = 1
+flag = 1
 
 while(1):
     if sp.is_connected():
         sp.on_write(on_rx)
-    elif not sp.is_connected() and not vars.Level == 0:
-        LCD_reinit()
-        vars.Level = 0
     else:
-        set_neopixel(vars.Level)
-        
-    if(vars.flag):
-        print(f'Duty Cycle: {vars.Level}%')
-        LCD.Text2(str(vars.Level) + ' %  ', 320, 50, Yellow, Black)
-        vars.flag = 0
+        update_motor_speed(0)
+
+    if(flag):
+        print(f'Duty Cycle: {motor_duty}%')
+        LCD.Text2(str(motor_duty) + ' %  ', 320, 50, Yellow, Black)
+        flag = 0
